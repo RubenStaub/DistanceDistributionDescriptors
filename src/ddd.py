@@ -110,32 +110,32 @@ class DDD(object):
         atomic_numbers: Sequence[int],
         distance_matrix: Sequence[Sequence[float]],
     ) -> torch.Tensor[float]:
-    r"""Compute descriptors of a specific input.
+        r"""Compute descriptors of a specific input.
 
-    Distance smearing with summation over atomic pairs.
-    Example: if input has 3 atomic types A, B and C (sorted by Z),
-    and the basis set size chosen is 20, then the descripting vector is:
-    [[A-A, A-B, A-C]
-     [ ∅ , B-B, B-C]
-     [ ∅ ,  ∅ , C-C]] where A-B is a 20-size vector corresponding the smearing
-    of all A-B distances within cutoff(s) summed together.
-    This matrix is flatten into a single vector without redeundancies:
-    [A-A]+[A-B]+[A-C]+[B-B]+[B-C]+[C-C] (where + is the concatenation operator)
+        Distance smearing with summation over atomic pairs.
+        Example: if input has 3 atomic types A, B and C (sorted by Z),
+        and the basis set size chosen is 20, then the descripting vector is:
+        [[A-A, A-B, A-C]
+         [ ∅ , B-B, B-C]
+         [ ∅ ,  ∅ , C-C]] where A-B is a 20-size vector corresponding the smearing
+        of all A-B distances within cutoff(s) summed together.
+        This matrix is flatten into a single vector without redeundancies:
+        [A-A]+[A-B]+[A-C]+[B-B]+[B-C]+[C-C] (where + is the concatenation operator)
 
-    Parameters
-    ----------
-    atomic_numbers : array_like, optional
-        Atomic numbers, one per atom.
-        Size: (`nb_atoms`,)
-    distance_matrix : array_like, optional
-        Distance matrix, same order as `atomic_numbers`.
-        Note: only upper triangle is read.
-        Size: (`nb_atoms`, `nb_atoms`)
+        Parameters
+        ----------
+        atomic_numbers : array_like, optional
+            Atomic numbers, one per atom.
+            Size: (`nb_atoms`,)
+        distance_matrix : array_like, optional
+            Distance matrix, same order as `atomic_numbers`.
+            Note: only upper triangle is read.
+            Size: (`nb_atoms`, `nb_atoms`)
 
-    Returns
-    -------
-    descriptors : array_like
-    """
+        Returns
+        -------
+        descriptors : array_like
+        """
         atomic_numbers = torch.tensor(atomic_numbers)
         distance_matrix = torch.tensor(distance_matrix)
         
