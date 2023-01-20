@@ -104,7 +104,7 @@ class DDD(object):
         
         self.sorted_Z = supported_Z
         if self.sorted_Z:
-            self.sorted_Z = torch.sort(torch.unique(torch.tensor(self.sorted_Z)))
+            self.sorted_Z = torch.sort(torch.unique(torch.tensor(self.sorted_Z)))[0]
 
     def compute_descriptors(
         self,
@@ -142,7 +142,7 @@ class DDD(object):
         
         sorted_Z = self.sorted_Z
         if not sorted_Z:
-            sorted_Z = torch.sort(torch.unique(atomic_numbers))
+            sorted_Z = torch.sort(torch.unique(atomic_numbers))[0]
         
         ZZ_ddd = self.centers.new_zeros((len(sorted_Z), len(sorted_Z), len(self.centers)))
         for i, Z1 in enumerate(sorted_Z):
