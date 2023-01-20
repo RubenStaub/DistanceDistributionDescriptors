@@ -166,7 +166,7 @@ if __name__ == '__main__':
     parser.add_argument('--nb-basis-functions', '--size', type=int, help='Number of basis functions for describing each atomic pair', default=20)
     parser.add_argument('--centers', type=str, help='Custom centers to use (JSON format, list of Angstroms)', default=None)
     parser.add_argument('--widths', type=str, help='Custom widths to use (JSON format, list of Angstroms)', default=None)
-    parser.add_argument('--basis-function', type=str, help='Basis function ("gaussian_basis" or "gaussian_normalized")', default='gaussian_basis')
+    parser.add_argument('--basis-function', type=str, help='Basis function ("gaussian_basic" or "gaussian_normalized")', default='gaussian_basic')
     parser.add_argument('--atomic-types', type=str, help='Atomic types to include in the descriptors (JSON format, list of atomic numbers). Default: the atomic types of the input', default=None)
     args = parser.parse_args()
     
@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
     # Define basis function
     functions = {
-        "gaussian_basis": gaussian_basis,
+        "gaussian_basic": gaussian_basic,
         "gaussian_normalized": gaussian_normalized,
     }
     try:
