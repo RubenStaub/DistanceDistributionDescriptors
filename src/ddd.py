@@ -212,9 +212,9 @@ if __name__ == '__main__':
     
     # Write descriptors
     print('Writing descriptors')
-    with open(args.output, 'w') as out_file:
+    with (open(args.output, 'w') if args.output else sys.stdout) as out_file:
         for i, desc in enumerate(descriptors):
             if desc != 0 or i+1 == len(descriptors):
                 out_file.write(f"{i+1}:{desc} ")
-    print(f"Descriptors successfully written in: {args.output}")
+    print(f"Descriptors successfully written in: {args.output or 'standard output'}")
     
