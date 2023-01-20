@@ -102,7 +102,7 @@ class DDD(object):
         
         self.basis_function = basis_function or gaussian_basic
         
-        self.sorted_Z = sorted_Z
+        self.sorted_Z = supported_Z
         if self.sorted_Z:
             self.sorted_Z = torch.sort(torch.tensor(self.sorted_Z))
 
