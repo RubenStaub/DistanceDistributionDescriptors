@@ -6,6 +6,7 @@ from ase.units import Bohr
 import argparse
 import json
 import sys
+from typing import Union, Sequence, Callable
 
 def gaussian_basic(
     distances: Union[float, Sequence[float]],
