@@ -6,12 +6,14 @@ from ase.units import Bohr
 import argparse
 import json
 import sys
+from typing import Union, Sequence, Callable
+from tempfile import TemporaryFile
 
 def gaussian_basic(
     distances: Union[float, Sequence[float]],
     centers: Sequence[float],
     widths: Sequence[float],
-) -> torch.Tensor[float]:
+) -> torch.Tensor:
     if not isinstance(distances, torch.Tensor):
         distances = torch.tensor(distances)
     if not isinstance(centers, torch.Tensor):
@@ -25,7 +27,7 @@ def gaussian_normalized(
     distances: Union[float, Sequence[float]],
     centers: Sequence[float],
     widths: Sequence[float],
-) -> torch.Tensor[float]:
+) -> torch.Tensor:
     if not isinstance(distances, torch.Tensor):
         distances = torch.tensor(distances)
     if not isinstance(centers, torch.Tensor):
@@ -101,62 +103,68 @@ class DDD(object):
         
         self.basis_function = basis_function or gaussian_basic
         
-        self.sorted_Z = sorted_Z
+        self.sorted_Z = supported_Z
         if self.sorted_Z:
-            self.sorted_Z = torch.sort(torch.tensor(self.sorted_Z))
+            self.sorted_Z = torch.sort(torch.unique(torch.tensor(self.sorted_Z)))[0]
 
     def compute_descriptors(
         self,
         atomic_numbers: Sequence[int],
         distance_matrix: Sequence[Sequence[float]],
-    ) -> torch.Tensor[float]:
-    r"""Compute descriptors of a specific input.
+    ) -> torch.Tensor:
+        r"""Compute descriptors of a specific input.
 
-    Distance smearing with summation over atomic pairs.
-    Example: if input has 3 atomic types A, B and C (sorted by Z),
-    and the basis set size chosen is 20, then the descripting vector is:
-    [[A-A, A-B, A-C]
-     [ ∅ , B-B, B-C]
-     [ ∅ ,  ∅ , C-C]] where A-B is a 20-size vector corresponding the smearing
-    of all A-B distances within cutoff(s) summed together.
-    This matrix is flatten into a single vector without redeundancies:
-    [A-A]+[A-B]+[A-C]+[B-B]+[B-C]+[C-C] (where + is the concatenation operator)
+        Distance smearing with summation over atomic pairs.
+        Example: if input has 3 atomic types A, B and C (sorted by Z),
+        and the basis set size chosen is 20, then the descripting vector is:
+        [[A-A, A-B, A-C]
+         [ 0 , B-B, B-C]
+         [ 0 ,  0 , C-C]] where A-B is a 20-size vector corresponding the smearing
+        of all A-B distances within cutoff(s) summed together.
+        This matrix is flatten into a single vector without redeundancies:
+        [A-A]+[A-B]+[A-C]+[0]+[B-B]+[B-C]+[0]+[0]+[C-C] (where + is the concatenation operator)
 
-    Parameters
-    ----------
-    atomic_numbers : array_like, optional
-        Atomic numbers, one per atom.
-        Size: (`nb_atoms`,)
-    distance_matrix : array_like, optional
-        Distance matrix, same order as `atomic_numbers`.
-        Note: only upper triangle is read.
-        Size: (`nb_atoms`, `nb_atoms`)
+        Parameters
+        ----------
+        atomic_numbers : array_like, optional
+            Atomic numbers, one per atom.
+            Size: (`nb_atoms`,)
+        distance_matrix : array_like, optional
+            Distance matrix, same order as `atomic_numbers`.
+            Note: only upper triangle is read.
+            Size: (`nb_atoms`, `nb_atoms`)
 
-    Returns
-    -------
-    descriptors : array_like
-    """
+        Returns
+        -------
+        descriptors : array_like
+        """
         atomic_numbers = torch.tensor(atomic_numbers)
         distance_matrix = torch.tensor(distance_matrix)
         
         sorted_Z = self.sorted_Z
-        if not sorted_Z:
-            sorted_Z = torch.sort(torch.tensor(set(atomic_numbers)))
+        if sorted_Z is None:
+            sorted_Z = torch.sort(torch.unique(atomic_numbers))[0]
         
-        ZZ_ddd = self.centers.new_zeros((len(sorted_Z), len(sorted_Z), len(self.centers)))
+        ZZ_ddd = distance_matrix.new_zeros((len(sorted_Z), len(sorted_Z), len(self.centers)))
         for i, Z1 in enumerate(sorted_Z):
             for j, Z2 in enumerate(sorted_Z):
                 if j < i:
                     continue
+                # Retrieve Z1-Z2 distances
                 pair_distances = distance_matrix[atomic_numbers == Z1][:, atomic_numbers == Z2]
-                pair_distances = pair_distances[torch.triu(pair_distances) > 0]
-                ZZ_ddd[i,j] = self.basis_function(pair_distances, self.centers, self.widths).sum()
+                if Z1 == Z2:
+                    # Remove redundant distances
+                    pair_distances = pair_distances[torch.triu(pair_distances) > 0]
+                # Apply cutoffs
+                pair_distances = pair_distances[self.min_cutoff <= pair_distances]
+                pair_distances = pair_distances[pair_distances <= self.cutoff]
+                # Store summed smearing
+                ZZ_ddd[i,j] = self.basis_function(pair_distances, self.centers, self.widths).sum(dim=0)
         
         return(ZZ_ddd.flatten())
 
 if __name__ == '__main__':
     # Processing arguments
-    print('Processing arguments')
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, help='Input file path (any format recognized by ASE)', required=True)
     parser.add_argument('-o', '--output', type=str, help='Output file path (any format recognized by ASE)', default=None)
@@ -165,7 +173,7 @@ if __name__ == '__main__':
     parser.add_argument('--nb-basis-functions', '--size', type=int, help='Number of basis functions for describing each atomic pair', default=20)
     parser.add_argument('--centers', type=str, help='Custom centers to use (JSON format, list of Angstroms)', default=None)
     parser.add_argument('--widths', type=str, help='Custom widths to use (JSON format, list of Angstroms)', default=None)
-    parser.add_argument('--basis-function', type=str, help='Basis function ("gaussian_basis" or "gaussian_normalized")', default='gaussian_basis')
+    parser.add_argument('--basis-function', type=str, help='Basis function ("gaussian_basic" or "gaussian_normalized")', default='gaussian_basic')
     parser.add_argument('--atomic-types', type=str, help='Atomic types to include in the descriptors (JSON format, list of atomic numbers). Default: the atomic types of the input', default=None)
     args = parser.parse_args()
     
@@ -179,7 +187,7 @@ if __name__ == '__main__':
 
     # Define basis function
     functions = {
-        "gaussian_basis": gaussian_basis,
+        "gaussian_basic": gaussian_basic,
         "gaussian_normalized": gaussian_normalized,
     }
     try:
@@ -190,11 +198,11 @@ if __name__ == '__main__':
         raise(err)
 
     # Read input file
-    print('Reading input file')
+    if args.output: print('Reading input file')
     atoms = ase.io.read(args.input)
     
     # Compute descriptors
-    print('Computing descriptors')
+    if args.output: print('Computing descriptors')
     ddd = DDD(
         min_cutoff=args.min_cutoff,
         cutoff=args.cutoff,
@@ -210,10 +218,14 @@ if __name__ == '__main__':
     )
     
     # Write descriptors
-    print('Writing descriptors')
-    with open(args.output, 'w') as out_file:
+    if args.output: print('Writing descriptors')
+    with open(args.output, 'w') if args.output else TemporaryFile(mode='w+') as out_file:
         for i, desc in enumerate(descriptors):
             if desc != 0 or i+1 == len(descriptors):
-                out_file.write(f"{i+1}:{desc} ")
-    print(f"Descriptors successfully written in: {args.output}")
+                desc_str = f"{i+1}:{desc} "
+                out_file.write(desc_str)
+        if args.output is None:
+            out_file.seek(0)
+            print(out_file.read())
+    if args.output: print(f"Descriptors successfully written in: {args.output}")
     
