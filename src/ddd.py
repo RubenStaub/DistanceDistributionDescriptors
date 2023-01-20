@@ -117,11 +117,11 @@ class DDD(object):
         Example: if input has 3 atomic types A, B and C (sorted by Z),
         and the basis set size chosen is 20, then the descripting vector is:
         [[A-A, A-B, A-C]
-         [ ∅ , B-B, B-C]
-         [ ∅ ,  ∅ , C-C]] where A-B is a 20-size vector corresponding the smearing
+         [ 0 , B-B, B-C]
+         [ 0 ,  0 , C-C]] where A-B is a 20-size vector corresponding the smearing
         of all A-B distances within cutoff(s) summed together.
         This matrix is flatten into a single vector without redeundancies:
-        [A-A]+[A-B]+[A-C]+[B-B]+[B-C]+[C-C] (where + is the concatenation operator)
+        [A-A]+[A-B]+[A-C]+[0]+[B-B]+[B-C]+[0]+[0]+[C-C] (where + is the concatenation operator)
 
         Parameters
         ----------
@@ -212,9 +212,13 @@ if __name__ == '__main__':
     
     # Write descriptors
     print('Writing descriptors')
-    with (open(args.output, 'w') if args.output else sys.stdout) as out_file:
+    with (open(args.output, 'w') if args.output else None) as out_file:
         for i, desc in enumerate(descriptors):
             if desc != 0 or i+1 == len(descriptors):
-                out_file.write(f"{i+1}:{desc} ")
+                desc_str = f"{i+1}:{desc} "
+                if out_file not is None:
+                    out_file.write(desc_str)
+                else:
+                    print(desc_str, end='')
     print(f"Descriptors successfully written in: {args.output or 'standard output'}")
     
