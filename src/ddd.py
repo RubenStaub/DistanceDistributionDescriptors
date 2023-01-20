@@ -153,6 +153,7 @@ class DDD(object):
                 pair_distances = distance_matrix[atomic_numbers == Z1][:, atomic_numbers == Z2]
                 if Z1 == Z2:
                     pair_distances = pair_distances[torch.triu(pair_distances) > 0]
+                pair_distances = pair_distances[self.min_cutoff <= pair_distances <= self.cutoff]
                 ZZ_ddd[i,j] = self.basis_function(pair_distances, self.centers, self.widths).sum(dim=0)
         
         return(ZZ_ddd.flatten())
