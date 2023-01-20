@@ -145,7 +145,7 @@ class DDD(object):
         if not sorted_Z:
             sorted_Z = torch.sort(torch.unique(atomic_numbers))[0]
         
-        ZZ_ddd = self.centers.new_zeros((len(sorted_Z), len(sorted_Z), len(self.centers)))
+        ZZ_ddd = distance_matrix.new_zeros((len(sorted_Z), len(sorted_Z), len(self.centers)))
         for i, Z1 in enumerate(sorted_Z):
             for j, Z2 in enumerate(sorted_Z):
                 if j < i:
