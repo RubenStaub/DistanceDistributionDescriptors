@@ -7,6 +7,7 @@ import argparse
 import json
 import sys
 from typing import Union, Sequence, Callable
+from tempfile import TemporaryFile
 
 def gaussian_basic(
     distances: Union[float, Sequence[float]],
@@ -212,13 +213,13 @@ if __name__ == '__main__':
     
     # Write descriptors
     print('Writing descriptors')
-    with (open(args.output, 'w') if args.output else None) as out_file:
+    with open(args.output, 'w') if args.output else TemporaryFile() as out_file:
         for i, desc in enumerate(descriptors):
             if desc != 0 or i+1 == len(descriptors):
                 desc_str = f"{i+1}:{desc} "
-                if out_file is not None:
-                    out_file.write(desc_str)
-                else:
-                    print(desc_str, end='')
+                out_file.write(desc_str)
+        if args.output is None:
+            out_file.seek(0)
+            print(out_file.read())
     print(f"Descriptors successfully written in: {args.output or 'standard output'}")
     
