@@ -142,7 +142,7 @@ class DDD(object):
         distance_matrix = torch.tensor(distance_matrix)
         
         sorted_Z = self.sorted_Z
-        if not sorted_Z:
+        if sorted_Z is None:
             sorted_Z = torch.sort(torch.unique(atomic_numbers))[0]
         
         ZZ_ddd = distance_matrix.new_zeros((len(sorted_Z), len(sorted_Z), len(self.centers)))
