@@ -12,7 +12,7 @@ def gaussian_basic(
     distances: Union[float, Sequence[float]],
     centers: Sequence[float],
     widths: Sequence[float],
-) -> torch.Tensor[float]:
+) -> torch.Tensor:
     if not isinstance(distances, torch.Tensor):
         distances = torch.tensor(distances)
     if not isinstance(centers, torch.Tensor):
@@ -26,7 +26,7 @@ def gaussian_normalized(
     distances: Union[float, Sequence[float]],
     centers: Sequence[float],
     widths: Sequence[float],
-) -> torch.Tensor[float]:
+) -> torch.Tensor:
     if not isinstance(distances, torch.Tensor):
         distances = torch.tensor(distances)
     if not isinstance(centers, torch.Tensor):
@@ -110,7 +110,7 @@ class DDD(object):
         self,
         atomic_numbers: Sequence[int],
         distance_matrix: Sequence[Sequence[float]],
-    ) -> torch.Tensor[float]:
+    ) -> torch.Tensor:
         r"""Compute descriptors of a specific input.
 
         Distance smearing with summation over atomic pairs.
