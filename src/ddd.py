@@ -216,7 +216,7 @@ if __name__ == '__main__':
         for i, desc in enumerate(descriptors):
             if desc != 0 or i+1 == len(descriptors):
                 desc_str = f"{i+1}:{desc} "
-                if out_file not is None:
+                if out_file is not None:
                     out_file.write(desc_str)
                 else:
                     print(desc_str, end='')
