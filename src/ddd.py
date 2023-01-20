@@ -158,7 +158,7 @@ class DDD(object):
 
 if __name__ == '__main__':
     # Processing arguments
-    print('Processing arguments')
+    if args.output: print('Processing arguments')
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, help='Input file path (any format recognized by ASE)', required=True)
     parser.add_argument('-o', '--output', type=str, help='Output file path (any format recognized by ASE)', default=None)
@@ -192,11 +192,11 @@ if __name__ == '__main__':
         raise(err)
 
     # Read input file
-    print('Reading input file')
+    if args.output: print('Reading input file')
     atoms = ase.io.read(args.input)
     
     # Compute descriptors
-    print('Computing descriptors')
+    if args.output: print('Computing descriptors')
     ddd = DDD(
         min_cutoff=args.min_cutoff,
         cutoff=args.cutoff,
@@ -212,8 +212,8 @@ if __name__ == '__main__':
     )
     
     # Write descriptors
-    print('Writing descriptors')
-    with open(args.output, 'w') if args.output else TemporaryFile() as out_file:
+    if args.output: print('Writing descriptors')
+    with open(args.output, 'w') if args.output else TemporaryFile(mode='w+') as out_file:
         for i, desc in enumerate(descriptors):
             if desc != 0 or i+1 == len(descriptors):
                 desc_str = f"{i+1}:{desc} "
@@ -221,5 +221,5 @@ if __name__ == '__main__':
         if args.output is None:
             out_file.seek(0)
             print(out_file.read())
-    print(f"Descriptors successfully written in: {args.output or 'standard output'}")
+    if args.output: print(f"Descriptors successfully written in: {args.output}")
     
