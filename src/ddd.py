@@ -167,7 +167,7 @@ if __name__ == '__main__':
     # Processing arguments
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i', '--input', type=str, help='Input file path (any format recognized by ASE)', required=True)
-    parser.add_argument('-o', '--output', type=str, help='Output file path (any format recognized by ASE)', default=None)
+    parser.add_argument('-o', '--output', type=str, help='Output file path (prints to standard output if unspecified or empty)', default=None)
     parser.add_argument('--min-cutoff', type=float, help='Minimum distance cutoff (Angstroms)', default=0)
     parser.add_argument('--cutoff', type=float, help='Maximum distance cutoff (Angstroms). Default: 10 Bohr', default=5.291772105638412)
     parser.add_argument('--nb-basis-functions', '--size', type=int, help='Number of basis functions for describing each atomic pair', default=20)
