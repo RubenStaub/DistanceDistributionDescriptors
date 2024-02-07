@@ -165,7 +165,7 @@ class DDD(object):
 
 if __name__ == '__main__':
     # Processing arguments
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i', '--input', type=str, help='Input file path (any format recognized by ASE)', required=True)
     parser.add_argument('-o', '--output', type=str, help='Output file path (any format recognized by ASE)', default=None)
     parser.add_argument('--min-cutoff', type=float, help='Minimum distance cutoff (Angstroms)', default=0)
